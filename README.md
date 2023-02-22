@@ -1,0 +1,1 @@
+# migratable-cosmwasm-contract-standard
