@@ -1,5 +1,5 @@
 [package]
-name = "migration"
+name = "cosmwasm-contract-migratable-std"
 version = "0.1.0"
 authors = ["Eqoty Labs"]
 edition = "2021"
