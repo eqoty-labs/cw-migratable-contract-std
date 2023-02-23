@@ -10,7 +10,6 @@ pub static NOTIFY_ON_MIGRATION_COMPLETE_KEY: &[u8; 16] = b"notifyOnMigrated";
 /// key for current ContractMode
 pub const CONTRACT_MODE_KEY: &[u8] = b"contractMode";
 
-
 #[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Debug, PartialEq)]
 #[repr(u8)]
 pub enum ContractMode {
@@ -41,5 +40,3 @@ pub struct MigratedToState {
     /// the secret needed by another contract to migrate data out
     pub migration_secret: Binary,
 }
-
-

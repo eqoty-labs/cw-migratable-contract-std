@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Api, ContractInfo, StdError, StdResult, Storage};
     use cosmwasm_std::testing::{mock_dependencies, mock_info};
+    use cosmwasm_std::{Addr, Api, ContractInfo, StdError, StdResult, Storage};
     use secret_toolkit::serialization::{Bincode2, Serde};
 
     use crate::execute::register_to_notify_on_migration_complete;
@@ -24,7 +24,9 @@ mod tests {
         assert!(res.is_err(), "execute didn't fail");
         assert_eq!(
             res.err().unwrap(),
-            StdError::generic_err("This is an admin command and can only be run from the admin address")
+            StdError::generic_err(
+                "This is an admin command and can only be run from the admin address"
+            )
         );
     }
 
@@ -44,9 +46,8 @@ mod tests {
             receiver.address.to_string(),
             receiver.code_hash.to_string(),
         )?;
-        let saved_contract: Vec<ContractInfo> = Bincode2::deserialize(
-            &deps.storage.get(NOTIFY_ON_MIGRATION_COMPLETE_KEY).unwrap()
-        )?;
+        let saved_contract: Vec<ContractInfo> =
+            Bincode2::deserialize(&deps.storage.get(NOTIFY_ON_MIGRATION_COMPLETE_KEY).unwrap())?;
         assert_eq!(vec![receiver], saved_contract);
         Ok(())
     }

@@ -14,19 +14,13 @@ pub enum MigratableExecuteMsg {
         migrate_to: MigrateTo,
     },
     /// Sets a contract that should be notified when this contract completes the migration process
-    RegisterToNotifyOnMigrationComplete {
-        address: String,
-        code_hash: String,
-    },
+    RegisterToNotifyOnMigrationComplete { address: String, code_hash: String },
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MigrationListenerExecuteMsg {
-    MigrationCompleteNotification {
-        from: ContractInfo
-    }
+    MigrationCompleteNotification { from: ContractInfo },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
