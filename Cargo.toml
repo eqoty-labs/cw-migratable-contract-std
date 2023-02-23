@@ -1,6 +1,6 @@
 [package]
 name = "cosmwasm-contract-migratable-std"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Luca Spinazzola"]
 edition = "2021"
 license-file = "LICENSE"
@@ -34,5 +34,5 @@ serde-cw-value = { version = "0.7.0" }
 serde = { version = "1.0.152", default-features = false, features = ["derive"] }
 serde_repr = "0.1.10"
 schemars = "0.8.11"
-cosmwasm-std = { git = "https://github.com/scrtlabs/cosmwasm", tag = "v1.1.0-secret" }
+cosmwasm-std = { git = "https://github.com/scrtlabs/cosmwasm", tag = "v1.1.9-secret" }
 secret-toolkit = { git = "https://github.com/scrtlabs/secret-toolkit", tag = "v0.8.0", default-features = false, features = ["permit", "serialization"] }
