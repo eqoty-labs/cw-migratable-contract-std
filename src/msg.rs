@@ -1,8 +1,9 @@
+use cosmwasm_std::ContractInfo;
 use schemars::JsonSchema;
 use secret_toolkit::permit::Permit;
 use serde::{Deserialize, Serialize};
 
-use crate::msg_types::{ContractInfo, MigrateTo};
+use crate::msg_types::MigrateTo;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]

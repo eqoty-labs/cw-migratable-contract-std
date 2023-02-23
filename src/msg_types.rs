@@ -1,4 +1,4 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, ContractInfo};
 use schemars::JsonSchema;
 use secret_toolkit::permit::Permit;
 use serde::{Deserialize, Serialize};
@@ -31,29 +31,4 @@ pub struct MigrateTo {
     pub address: Addr,
     pub code_hash: String,
     pub entropy: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Eq, Debug, PartialEq, JsonSchema)]
-pub struct ContractInfo {
-    pub address: Addr,
-    #[serde(default)]
-    pub code_hash: String,
-}
-
-impl Into<cosmwasm_std::ContractInfo> for ContractInfo {
-    fn into(self) -> cosmwasm_std::ContractInfo {
-        cosmwasm_std::ContractInfo {
-            address: self.address,
-            code_hash: self.code_hash,
-        }
-    }
-}
-
-impl Into<ContractInfo> for cosmwasm_std::ContractInfo {
-    fn into(self) -> ContractInfo {
-        ContractInfo {
-            address: self.address,
-            code_hash: self.code_hash,
-        }
-    }
 }
