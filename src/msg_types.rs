@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, ContractInfo};
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use secret_toolkit::permit::Permit;
 use serde::{Deserialize, Serialize};
@@ -6,10 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ReplyError {
-    StateChangesNotAllowed {
-        message: String,
-        migrated_to: ContractInfo,
-    },
+    OperationUnavailable { message: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
