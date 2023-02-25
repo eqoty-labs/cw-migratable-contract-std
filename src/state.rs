@@ -10,8 +10,9 @@ pub static NOTIFY_ON_MIGRATION_COMPLETE_KEY: &[u8; 16] = b"notifyOnMigrated";
 /// key for current ContractMode
 pub const CONTRACT_MODE_KEY: &[u8] = b"contractMode";
 
-#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Debug, PartialEq)]
-#[cfg_attr(test, derive(strum::EnumIter))]
+#[derive(
+    serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Debug, PartialEq, strum::EnumIter,
+)]
 #[repr(u8)]
 pub enum ContractMode {
     MigrateDataIn = 1,
