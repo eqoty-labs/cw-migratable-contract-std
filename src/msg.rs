@@ -1,4 +1,4 @@
-use cosmwasm_std::ContractInfo;
+use cosmwasm_std::{Binary, ContractInfo};
 use schemars::JsonSchema;
 use secret_toolkit::permit::Permit;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,14 @@ pub enum MigratableExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MigrationListenerExecuteMsg {
-    MigrationCompleteNotification { from: ContractInfo },
+    /// Upon a contract setting its ContractMode to MigratedOut. All contracts registered to be
+    /// notified of a completed migration with RegisterToNotifyOnMigrationComplete should be sent
+    /// a MigrationCompleteNotification message
+    MigrationCompleteNotification {
+        to: ContractInfo,
+        // optional data to send
+        data: Option<Binary>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
