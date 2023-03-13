@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// storage for MigratedFromState singleton
 pub static MIGRATED_FROM: Item<MigratedFromState> = Item::new(b"migratedFrom");
 /// storage for MigratedToState singleton
-pub static MIGRATED_TO_KEY: Item<MigratedToState> = Item::new(b"migratedTo");
+pub static MIGRATED_TO: Item<MigratedToState> = Item::new(b"migratedTo");
 /// storage for list of contracts to notify when this contract has been migrated
 pub static NOTIFY_ON_MIGRATION_COMPLETE: Item<Vec<ContractInfo>> = Item::new(b"notifyOnMigrated");
 /// storage for current ContractMode
