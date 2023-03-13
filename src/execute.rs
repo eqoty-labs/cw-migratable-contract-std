@@ -2,11 +2,9 @@ use cosmwasm_std::{
     CanonicalAddr, ContractInfo, DepsMut, MessageInfo, Response, StdError, StdResult,
 };
 use schemars::_serde_json::to_string;
-use secret_toolkit::serialization::{Bincode2, Serde};
-use secret_toolkit::storage::item::Item;
 
 use crate::msg_types::ReplyError::OperationUnavailable;
-use crate::state::{ContractMode, CONTRACT_MODE_KEY, NOTIFY_ON_MIGRATION_COMPLETE_KEY};
+use crate::state::{ContractMode, CONTRACT_MODE, NOTIFY_ON_MIGRATION_COMPLETE};
 
 pub fn build_operation_unavailable_error(
     contract_mode: &ContractMode,
@@ -44,9 +42,7 @@ pub fn register_to_notify_on_migration_complete(
     contract_mode: Option<ContractMode>,
 ) -> StdResult<Response> {
     let contract_mode = if contract_mode.is_none() {
-        Item::<ContractMode>::new(CONTRACT_MODE_KEY)
-            .may_load(deps.storage)?
-            .unwrap()
+        CONTRACT_MODE.may_load(deps.storage)?.unwrap()
     } else {
         contract_mode.unwrap()
     };
@@ -61,7 +57,7 @@ pub fn register_to_notify_on_migration_complete(
             "This is an admin command and can only be run from the admin address",
         ));
     }
-    let mut contracts = Item::<Vec<ContractInfo>>::new(NOTIFY_ON_MIGRATION_COMPLETE_KEY)
+    let mut contracts = NOTIFY_ON_MIGRATION_COMPLETE
         .may_load(deps.storage)?
         .unwrap_or_default();
     let mut update = false;
@@ -76,10 +72,7 @@ pub fn register_to_notify_on_migration_complete(
 
     // only save if the list changed
     if update {
-        deps.storage.set(
-            NOTIFY_ON_MIGRATION_COMPLETE_KEY,
-            &Bincode2::serialize(&contracts)?,
-        );
+        NOTIFY_ON_MIGRATION_COMPLETE.save(deps.storage, &contracts)?;
     }
     Ok(Response::new())
 }

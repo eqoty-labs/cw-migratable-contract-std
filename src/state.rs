@@ -1,14 +1,15 @@
 use cosmwasm_std::{Binary, ContractInfo};
+use secret_toolkit::storage::Item;
 use serde::{Deserialize, Serialize};
 
-/// key for MigratedFrom singleton
-pub static MIGRATED_FROM_KEY: &[u8] = b"migratedFrom";
-/// key for MigratedTo singleton
-pub static MIGRATED_TO_KEY: &[u8] = b"migratedTo";
-/// key for Vec<ContractInfo> of contracts to notify when this contract has been migrated
-pub static NOTIFY_ON_MIGRATION_COMPLETE_KEY: &[u8; 16] = b"notifyOnMigrated";
-/// key for current ContractMode
-pub const CONTRACT_MODE_KEY: &[u8] = b"contractMode";
+/// storage for MigratedFromState singleton
+pub static MIGRATED_FROM: Item<MigratedFromState> = Item::new(b"migratedFrom");
+/// storage for MigratedToState singleton
+pub static MIGRATED_TO_KEY: Item<MigratedToState> = Item::new(b"migratedTo");
+/// storage for list of contracts to notify when this contract has been migrated
+pub static NOTIFY_ON_MIGRATION_COMPLETE: Item<Vec<ContractInfo>> = Item::new(b"notifyOnMigrated");
+/// storage for current ContractMode
+pub static CONTRACT_MODE: Item<ContractMode> = Item::new(b"contractMode");
 
 #[derive(
     serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Debug, PartialEq, strum::EnumIter,

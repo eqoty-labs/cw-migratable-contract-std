@@ -31,9 +31,9 @@ backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
 serde-cw-value = { version = "0.7.0" }
-serde = { version = "1.0.154", default-features = false, features = ["derive"] }
+serde = { version = "1.0.155", default-features = false, features = ["derive"] }
 serde_repr = "0.1.11"
 schemars = "0.8.12"
 cosmwasm-std = { git = "https://github.com/scrtlabs/cosmwasm", tag = "v1.1.9-secret" }
-secret-toolkit = { git = "https://github.com/scrtlabs/secret-toolkit", tag = "v0.8.0", default-features = false, features = ["storage", "permit", "serialization"] }
+secret-toolkit = { git = "https://github.com/scrtlabs/secret-toolkit", tag = "v0.8.0", features = ["storage", "permit", "serialization"] }
 strum = { version = "0.24.1", features = ["derive"] }
