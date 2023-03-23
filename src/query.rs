@@ -10,7 +10,7 @@ use crate::state::{MIGRATED_FROM, MIGRATED_TO};
 /// * `deps` - a reference to Extern containing all the contract's external dependencies
 /// * `migrated_from` - if migrated_from is true query returns info about the contract it was migrated
 /// from otherwise if returns info about the info the contract was migrated to
-pub(crate) fn query_migrated_info(deps: Deps, migrated_from: bool) -> StdResult<Binary> {
+pub fn query_migrated_info(deps: Deps, migrated_from: bool) -> StdResult<Binary> {
     return match migrated_from {
         true => {
             let migrated_from = MIGRATED_FROM.may_load(deps.storage)?;
