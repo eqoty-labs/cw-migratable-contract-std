@@ -17,7 +17,7 @@ pub fn query_migrated_info(deps: Deps, migrated_from: bool) -> StdResult<Binary>
             match migrated_from {
                 None => to_binary(&MigratableQueryAnswer::MigrationInfo(None)),
                 Some(some_migrated_from) => to_binary(&MigratableQueryAnswer::MigrationInfo(Some(
-                    some_migrated_from.contract,
+                    some_migrated_from.contract.into_humanized(deps.api)?,
                 ))),
             }
         }
@@ -26,7 +26,7 @@ pub fn query_migrated_info(deps: Deps, migrated_from: bool) -> StdResult<Binary>
             match migrated_to {
                 None => to_binary(&MigratableQueryAnswer::MigrationInfo(None)),
                 Some(some_migrated_to) => to_binary(&MigratableQueryAnswer::MigrationInfo(Some(
-                    some_migrated_to.contract,
+                    some_migrated_to.contract.into_humanized(deps.api)?,
                 ))),
             }
         }

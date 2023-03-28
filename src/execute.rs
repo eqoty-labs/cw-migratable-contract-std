@@ -1,10 +1,11 @@
-use cosmwasm_std::{
-    CanonicalAddr, ContractInfo, DepsMut, MessageInfo, Response, StdError, StdResult,
-};
+use cosmwasm_std::{DepsMut, Response, StdError, StdResult};
 use schemars::_serde_json::to_string;
 
 use crate::msg_types::ReplyError::OperationUnavailable;
-use crate::state::{ContractMode, CONTRACT_MODE, NOTIFY_ON_MIGRATION_COMPLETE};
+use crate::state::{
+    CanonicalContractInfo, ContractMode, CONTRACT_MODE, NOTIFY_ON_MIGRATION_COMPLETE,
+    REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS,
+};
 
 pub fn build_operation_unavailable_error(
     contract_mode: &ContractMode,
@@ -35,8 +36,6 @@ pub fn check_contract_mode(
 
 pub fn register_to_notify_on_migration_complete(
     deps: DepsMut,
-    info: MessageInfo,
-    admin: CanonicalAddr,
     address: String,
     code_hash: String,
     contract_mode: Option<ContractMode>,
@@ -51,18 +50,23 @@ pub fn register_to_notify_on_migration_complete(
     {
         return Err(contract_mode_error);
     }
-    let sender_raw = deps.api.addr_canonicalize(info.sender.as_str())?;
-    if admin != sender_raw {
-        return Err(StdError::generic_err(
-            "This is an admin command and can only be run from the admin address",
-        ));
+    if let Some(remaining_slots) =
+        REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS.may_load(deps.storage)?
+    {
+        if remaining_slots == 0 {
+            return Err(StdError::generic_err(
+                "No migration complete notification slots available",
+            ));
+        }
+        REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS.save(deps.storage, &(remaining_slots - 1))?
     }
     let mut contracts = NOTIFY_ON_MIGRATION_COMPLETE
         .may_load(deps.storage)?
         .unwrap_or_default();
     let mut update = false;
-    let new_contract = ContractInfo {
-        address: deps.api.addr_validate(address.as_str())?,
+    let validated = deps.api.addr_validate(address.as_str())?;
+    let new_contract = CanonicalContractInfo {
+        address: deps.api.addr_canonicalize(validated.as_str())?,
         code_hash,
     };
     if !contracts.contains(&new_contract) {

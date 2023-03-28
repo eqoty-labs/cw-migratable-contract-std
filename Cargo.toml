@@ -1,6 +1,6 @@
 [package]
 name = "cosmwasm-contract-migratable-std"
-version = "2.1.0"
+version = "3.0.0"
 authors = ["Luca Spinazzola"]
 edition = "2021"
 license-file = "LICENSE"
@@ -27,11 +27,10 @@ overflow-checks = true
 default = []
 # for quicker tests, cargo test --lib
 # for more explicit tests, cargo test --features=backtraces
-backtraces = ["cosmwasm-std/backtraces"]
+#backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
-serde-cw-value = { version = "0.7.0" }
-serde = { version = "1.0.158", default-features = false, features = ["derive"] }
+serde = { version = "1.0.159", default-features = false, features = ["derive"] }
 serde_repr = "0.1.12"
 schemars = "0.8.12"
 cosmwasm-std = { git = "https://github.com/scrtlabs/cosmwasm", tag = "v1.1.9-secret" }
