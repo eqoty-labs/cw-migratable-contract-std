@@ -15,7 +15,14 @@ pub enum MigratableExecuteMsg {
         migrate_to: MigrateTo,
     },
     /// Sets a contract that should be notified when this contract completes the migration process
-    RegisterToNotifyOnMigrationComplete { address: String, code_hash: String },
+    SubscribeToOnMigrationCompleteEvent {
+        address: String,
+        code_hash: String,
+        /// if true, the sender is requesting that the receiver of this message sends a reciprocal
+        /// SubscribeToOnMigrationCompleteEvent message to the address (useful if the address is
+        /// also a migratable contract)
+        reciprocal_sub_requested: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]

@@ -1,12 +1,16 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::{Addr, ContractInfo, StdError, StdResult};
+    use cosmwasm_std::{
+        from_binary, Addr, Coin, ContractInfo, CosmosMsg, StdError, StdResult, WasmMsg,
+    };
     use strum::IntoEnumIterator;
 
     use crate::execute::{
         build_operation_unavailable_error, register_to_notify_on_migration_complete,
+        update_migrated_subscriber,
     };
+    use crate::msg::MigratableExecuteMsg::SubscribeToOnMigrationCompleteEvent;
     use crate::state::{
         canonicalize, ContractMode, CONTRACT_MODE, NOTIFY_ON_MIGRATION_COMPLETE,
         REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS,
@@ -20,18 +24,22 @@ mod tests {
         let receiver_code_hash = "code_hash".to_string();
         CONTRACT_MODE.save(deps.as_mut().storage, &ContractMode::Running)?;
         REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS.save(deps.as_mut().storage, &1)?;
+        let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
         let res = register_to_notify_on_migration_complete(
             deps.as_mut(),
+            mode,
             receiver_address.clone(),
             receiver_code_hash.clone(),
-            None,
+            false,
         );
         assert!(res.is_ok(), "execute failed");
+        let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
         let res = register_to_notify_on_migration_complete(
             deps.as_mut(),
+            mode,
             receiver_address,
             receiver_code_hash,
-            None,
+            false,
         );
         assert!(res.is_err(), "execute didn't fail");
         assert_eq!(
@@ -49,11 +57,13 @@ mod tests {
             address: Addr::unchecked("receiver_addr"),
             code_hash: "code_hash".to_string(),
         };
+        let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
         register_to_notify_on_migration_complete(
             deps.as_mut(),
+            mode,
             receiver.address.to_string(),
             receiver.code_hash.to_string(),
-            None,
+            false,
         )?;
         let saved_contract = NOTIFY_ON_MIGRATION_COMPLETE.load(deps.as_ref().storage)?;
         assert_eq!(
@@ -76,11 +86,13 @@ mod tests {
         };
         for invalid_mode in invalid_modes {
             CONTRACT_MODE.save(deps.as_mut().storage, &invalid_mode)?;
+            let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
             let res = register_to_notify_on_migration_complete(
                 deps.as_mut(),
+                mode,
                 receiver.address.to_string(),
                 receiver.code_hash.to_string(),
-                None,
+                false,
             );
             assert_eq!(
                 res.err().unwrap(),
@@ -89,4 +101,73 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn register_to_notify_on_migration_complete_creates_reciprocal_subscribe_submsg(
+    ) -> StdResult<()> {
+        let mut deps = mock_dependencies();
+        CONTRACT_MODE.save(deps.as_mut().storage, &ContractMode::Running)?;
+        let receiver = &ContractInfo {
+            address: Addr::unchecked("receiver_addr"),
+            code_hash: "code_hash".to_string(),
+        };
+        let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
+        let res = register_to_notify_on_migration_complete(
+            deps.as_mut(),
+            mode,
+            receiver.address.to_string(),
+            receiver.code_hash.to_string(),
+            true,
+        )?;
+
+        match &res.messages[0].msg {
+            CosmosMsg::Wasm(msg) => match msg {
+                WasmMsg::Execute {
+                    contract_addr,
+                    code_hash,
+                    msg,
+                    funds,
+                    ..
+                } => {
+                    assert_eq!(
+                        SubscribeToOnMigrationCompleteEvent {
+                            address: receiver.address.to_string(),
+                            code_hash: receiver.code_hash.to_string(),
+                            reciprocal_sub_requested: false,
+                        },
+                        from_binary(msg)?
+                    );
+                    assert_eq!(contract_addr, &receiver.address);
+                    assert_eq!(code_hash, &receiver.code_hash);
+                    assert_eq!(&Vec::<Coin>::new(), funds);
+                }
+                _ => panic!("unexpected"),
+            },
+            _ => panic!("unexpected"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn register_to_notify_on_migration_complete_creates_no_submsg_when_not_requested(
+    ) -> StdResult<()> {
+        let mut deps = mock_dependencies();
+        CONTRACT_MODE.save(deps.as_mut().storage, &ContractMode::Running)?;
+        let receiver = &ContractInfo {
+            address: Addr::unchecked("receiver_addr"),
+            code_hash: "code_hash".to_string(),
+        };
+        let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
+        let res = register_to_notify_on_migration_complete(
+            deps.as_mut(),
+            mode,
+            receiver.address.to_string(),
+            receiver.code_hash.to_string(),
+            false,
+        )?;
+
+        assert_eq!(0, res.messages.len());
+        Ok(())
+    }
+
 }

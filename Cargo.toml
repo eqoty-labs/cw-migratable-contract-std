@@ -1,6 +1,6 @@
 [package]
 name = "cosmwasm-contract-migratable-std"
-version = "3.0.0"
+version = "4.0.0"
 authors = ["Luca Spinazzola"]
 edition = "2021"
 license-file = "LICENSE"
@@ -24,7 +24,7 @@ overflow-checks = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = []
+#default = []
 # for quicker tests, cargo test --lib
 # for more explicit tests, cargo test --features=backtraces
 #backtraces = ["cosmwasm-std/backtraces"]

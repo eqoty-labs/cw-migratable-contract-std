@@ -1,9 +1,12 @@
-use cosmwasm_std::{DepsMut, Response, StdError, StdResult};
+use cosmwasm_std::{
+    to_binary, CanonicalAddr, CosmosMsg, DepsMut, Response, StdError, StdResult, SubMsg, WasmMsg,
+};
 use schemars::_serde_json::to_string;
 
+use crate::msg::MigratableExecuteMsg::SubscribeToOnMigrationCompleteEvent;
 use crate::msg_types::ReplyError::OperationUnavailable;
 use crate::state::{
-    CanonicalContractInfo, ContractMode, CONTRACT_MODE, NOTIFY_ON_MIGRATION_COMPLETE,
+    CanonicalContractInfo, ContractMode, NOTIFY_ON_MIGRATION_COMPLETE,
     REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS,
 };
 
@@ -36,15 +39,11 @@ pub fn check_contract_mode(
 
 pub fn register_to_notify_on_migration_complete(
     deps: DepsMut,
+    contract_mode: ContractMode,
     address: String,
     code_hash: String,
-    contract_mode: Option<ContractMode>,
+    reciprocal_sub_requested: bool,
 ) -> StdResult<Response> {
-    let contract_mode = if contract_mode.is_none() {
-        CONTRACT_MODE.may_load(deps.storage)?.unwrap()
-    } else {
-        contract_mode.unwrap()
-    };
     if let Some(contract_mode_error) =
         check_contract_mode(vec![ContractMode::Running], &contract_mode, None)
     {
@@ -67,7 +66,7 @@ pub fn register_to_notify_on_migration_complete(
     let validated = deps.api.addr_validate(address.as_str())?;
     let new_contract = CanonicalContractInfo {
         address: deps.api.addr_canonicalize(validated.as_str())?,
-        code_hash,
+        code_hash: code_hash.clone(),
     };
     if !contracts.contains(&new_contract) {
         contracts.push(new_contract);
@@ -78,5 +77,19 @@ pub fn register_to_notify_on_migration_complete(
     if update {
         NOTIFY_ON_MIGRATION_COMPLETE.save(deps.storage, &contracts)?;
     }
-    Ok(Response::new())
+    let mut sub_msgs = Vec::<SubMsg>::new();
+    if reciprocal_sub_requested {
+        sub_msgs.push(SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: address.clone(),
+            code_hash: code_hash.clone(),
+            msg: to_binary(&SubscribeToOnMigrationCompleteEvent {
+                address,
+                code_hash,
+                reciprocal_sub_requested: false,
+            })?,
+            funds: vec![],
+        })));
+    }
+    Ok(Response::new().add_submessages(sub_msgs))
+}
 }
