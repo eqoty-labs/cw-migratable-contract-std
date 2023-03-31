@@ -170,4 +170,79 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn update_migrated_subscriber_updates_storage() -> StdResult<()> {
+        let mut deps = mock_dependencies();
+        let subscriber_contract = canonicalize(
+            deps.as_ref().api,
+            &ContractInfo {
+                address: Addr::unchecked("subscriber_addr"),
+                code_hash: "subscriber_code_hash".to_string(),
+            },
+        )?;
+        let migrated_subscriber_contract = canonicalize(
+            deps.as_ref().api,
+            &ContractInfo {
+                address: Addr::unchecked("migrated_subscriber_addr"),
+                code_hash: "migrated_subscriber_code_hash".to_string(),
+            },
+        )?;
+        NOTIFY_ON_MIGRATION_COMPLETE
+            .save(deps.as_mut().storage, &vec![subscriber_contract.clone()])?;
+
+        update_migrated_subscriber(
+            deps.as_mut().storage,
+            &subscriber_contract.address,
+            &migrated_subscriber_contract,
+        )?;
+
+        assert_eq!(
+            vec![migrated_subscriber_contract],
+            NOTIFY_ON_MIGRATION_COMPLETE.load(deps.as_ref().storage)?
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn update_migrated_subscriber_does_not_update_storage_when_sender_does_not_match(
+    ) -> StdResult<()> {
+        let mut deps = mock_dependencies();
+        let subscriber_contract = canonicalize(
+            deps.as_ref().api,
+            &ContractInfo {
+                address: Addr::unchecked("subscriber_addr"),
+                code_hash: "subscriber_code_hash".to_string(),
+            },
+        )?;
+        let random_contract = canonicalize(
+            deps.as_ref().api,
+            &ContractInfo {
+                address: Addr::unchecked("random_addr"),
+                code_hash: "random_code_hash".to_string(),
+            },
+        )?;
+        let migrated_subscriber_contract = canonicalize(
+            deps.as_ref().api,
+            &ContractInfo {
+                address: Addr::unchecked("migrated_subscriber_addr"),
+                code_hash: "migrated_subscriber_code_hash".to_string(),
+            },
+        )?;
+        NOTIFY_ON_MIGRATION_COMPLETE
+            .save(deps.as_mut().storage, &vec![subscriber_contract.clone()])?;
+
+        update_migrated_subscriber(
+            deps.as_mut().storage,
+            &random_contract.address,
+            &migrated_subscriber_contract,
+        )?;
+
+        assert_eq!(
+            vec![subscriber_contract],
+            NOTIFY_ON_MIGRATION_COMPLETE.load(deps.as_ref().storage)?
+        );
+
+        Ok(())
+    }
 }

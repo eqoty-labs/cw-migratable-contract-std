@@ -1,5 +1,6 @@
 use cosmwasm_std::{
-    to_binary, CanonicalAddr, CosmosMsg, DepsMut, Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, CanonicalAddr, CosmosMsg, DepsMut, Response, StdError, StdResult, Storage, SubMsg,
+    WasmMsg,
 };
 use schemars::_serde_json::to_string;
 
@@ -92,4 +93,25 @@ pub fn register_to_notify_on_migration_complete(
     }
     Ok(Response::new().add_submessages(sub_msgs))
 }
+
+pub fn update_migrated_subscriber(
+    storage: &mut dyn Storage,
+    raw_sender: &CanonicalAddr,
+    raw_migrated_to: &CanonicalContractInfo,
+) -> StdResult<()> {
+    let mut notify_on_migration_contracts = NOTIFY_ON_MIGRATION_COMPLETE.load(storage)?;
+    let mut update = false;
+
+    for contract in notify_on_migration_contracts.iter_mut() {
+        if &contract.address == raw_sender {
+            contract.address = raw_migrated_to.address.clone();
+            contract.code_hash = raw_migrated_to.code_hash.clone();
+            update = true;
+            break;
+        }
+    }
+    if update {
+        NOTIFY_ON_MIGRATION_COMPLETE.save(storage, &notify_on_migration_contracts)?;
+    }
+    Ok(())
 }
