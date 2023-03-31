@@ -45,16 +45,6 @@ pub fn register_to_notify_on_migration_complete(
     {
         return Err(contract_mode_error);
     }
-    if let Some(remaining_slots) =
-        REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.may_load(deps.storage)?
-    {
-        if remaining_slots == 0 {
-            return Err(StdError::generic_err(
-                "No migration complete notification slots available",
-            ));
-        }
-        REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.save(deps.storage, &(remaining_slots - 1))?
-    }
     let validated = deps.api.addr_validate(address.as_str())?;
     add_migration_complete_event_subscriber(
         deps.storage,
@@ -69,6 +59,14 @@ pub fn add_migration_complete_event_subscriber(
     address: &CanonicalAddr,
     code_hash: &String,
 ) -> StdResult<()> {
+    if let Some(remaining_slots) = REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.may_load(storage)? {
+        if remaining_slots == 0 {
+            return Err(StdError::generic_err(
+                "No migration complete notification slots available",
+            ));
+        }
+        REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.save(storage, &(remaining_slots - 1))?
+    }
     let mut contracts = MIGRATION_COMPLETE_EVENT_SUBSCRIBERS
         .may_load(storage)?
         .unwrap_or_default();
