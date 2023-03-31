@@ -7,10 +7,10 @@ pub static MIGRATED_FROM: Item<MigratedFromState> = Item::new(b"migrtdFrom");
 /// storage for MigratedToState singleton
 pub static MIGRATED_TO: Item<MigratedToState> = Item::new(b"migrtdTo");
 /// storage for list of contracts to notify when this contract has been migrated
-pub static NOTIFY_ON_MIGRATION_COMPLETE: Item<Vec<CanonicalContractInfo>> =
-    Item::new(b"notifyOnMigrtd");
+pub static MIGRATION_COMPLETE_EVENT_SUBSCRIBERS: Item<Vec<CanonicalContractInfo>> =
+    Item::new(b"ntifyOnMigrtd");
 /// storage for an optional remaining number of contracts that can be registered to be notified of migration
-pub static REMAINING_NOTIFY_ON_MIGRATION_COMPLETE_SLOTS: Item<u8> = Item::new(b"notifySlots");
+pub static REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS: Item<u8> = Item::new(b"ntifyMigrtdSlts");
 /// storage for current ContractMode
 pub static CONTRACT_MODE: Item<ContractMode> = Item::new(b"cntrkMode");
 
