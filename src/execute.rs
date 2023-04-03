@@ -68,7 +68,7 @@ pub fn add_migration_complete_event_subscriber(
         REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.save(storage, &(remaining_slots - 1))?
     }
     let mut contracts = MIGRATION_COMPLETE_EVENT_SUBSCRIBERS
-        .may_load(storage)?
+        .load(storage)
         .unwrap_or_default();
     let mut update = false;
     let new_contract = CanonicalContractInfo {
@@ -92,19 +92,21 @@ pub fn update_migrated_subscriber(
     raw_sender: &CanonicalAddr,
     raw_migrated_to: &CanonicalContractInfo,
 ) -> StdResult<()> {
-    let mut notify_on_migration_contracts = MIGRATION_COMPLETE_EVENT_SUBSCRIBERS.load(storage)?;
-    let mut update = false;
+    let notify_on_migration_contracts = MIGRATION_COMPLETE_EVENT_SUBSCRIBERS.may_load(storage)?;
+    if let Some(mut notify_on_migration_contracts) = notify_on_migration_contracts {
+        let mut update = false;
 
-    for contract in notify_on_migration_contracts.iter_mut() {
-        if &contract.address == raw_sender {
-            contract.address = raw_migrated_to.address.clone();
-            contract.code_hash = raw_migrated_to.code_hash.clone();
-            update = true;
-            break;
+        for contract in notify_on_migration_contracts.iter_mut() {
+            if &contract.address == raw_sender {
+                contract.address = raw_migrated_to.address.clone();
+                contract.code_hash = raw_migrated_to.code_hash.clone();
+                update = true;
+                break;
+            }
         }
-    }
-    if update {
-        MIGRATION_COMPLETE_EVENT_SUBSCRIBERS.save(storage, &notify_on_migration_contracts)?;
+        if update {
+            MIGRATION_COMPLETE_EVENT_SUBSCRIBERS.save(storage, &notify_on_migration_contracts)?;
+        }
     }
     Ok(())
 }
