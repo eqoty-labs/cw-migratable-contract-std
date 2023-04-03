@@ -1,6 +1,6 @@
 [package]
 name = "cosmwasm-contract-migratable-std"
-version = "5.0.1"
+version = "5.0.2"
 authors = ["Luca Spinazzola"]
 edition = "2021"
 license-file = "LICENSE"
