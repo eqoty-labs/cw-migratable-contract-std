@@ -67,6 +67,7 @@ pub fn add_migration_complete_event_subscriber(
         }
         REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.save(storage, &(remaining_slots - 1))?
     }
+    // todo: consider using a keyset if it does not increase gas usage
     let mut contracts = MIGRATION_COMPLETE_EVENT_SUBSCRIBERS
         .load(storage)
         .unwrap_or_default();
