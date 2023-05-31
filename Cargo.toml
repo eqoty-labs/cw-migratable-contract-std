@@ -1,10 +1,10 @@
 [package]
-name = "cosmwasm-contract-migratable-std"
+name = "cw-migratable-contract-std"
 version = "5.0.5"
 authors = ["Luca Spinazzola"]
 edition = "2021"
 license-file = "LICENSE"
-repository = "https://github.com/eqoty-labs/cosmwasm-contract-migratable-std"
+repository = "https://github.com/eqoty-labs/cw-migratable-contract-std"
 readme = "Readme.md"
 description = "A collection of standardized messages, state structs, and helper functions a contract can use to implement contract migration."
 categories = ["cryptography::cryptocurrencies", "wasm"]
