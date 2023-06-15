@@ -4,7 +4,7 @@ mod tests {
     use cosmwasm_std::{from_binary, Addr, ContractInfo, StdResult};
 
     use crate::msg::MigratableQueryAnswer;
-    use crate::query::query_migrated_info;
+    use crate::query::{query_migrated_info, MigrationDirection};
     use crate::state::{
         canonicalize, MigratedFromState, MigratedToState, MIGRATED_FROM, MIGRATED_TO,
     };
@@ -25,7 +25,7 @@ mod tests {
         MIGRATED_FROM.save(deps.as_mut().storage, &saved_migrated_from)?;
 
         let queried_migrated_from: MigratableQueryAnswer =
-            from_binary(&query_migrated_info(deps.as_ref(), true).unwrap())?;
+            from_binary(&query_migrated_info(deps.as_ref(), MigrationDirection::From).unwrap())?;
         let MigratableQueryAnswer::MigrationInfo(queried_migrated_from) = queried_migrated_from;
         assert_eq!(
             Some(
@@ -54,7 +54,7 @@ mod tests {
         MIGRATED_TO.save(deps.as_mut().storage, &saved_migrated_to)?;
 
         let queried_migrated_to: MigratableQueryAnswer =
-            from_binary(&query_migrated_info(deps.as_ref(), false).unwrap())?;
+            from_binary(&query_migrated_info(deps.as_ref(), MigrationDirection::To).unwrap())?;
         let MigratableQueryAnswer::MigrationInfo(queried_migrated_to) = queried_migrated_to;
         assert_eq!(
             Some(
