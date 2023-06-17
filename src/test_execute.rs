@@ -7,7 +7,7 @@ mod tests {
     use strum::IntoEnumIterator;
 
     use crate::execute::{
-        broadcast_migration_complete_event_notification, build_operation_unavailable_error,
+        broadcast_migration_complete_notification, build_operation_unavailable_error,
         register_to_notify_on_migration_complete, update_migrated_subscriber,
     };
     use crate::msg::MigrationListenerExecuteMsg::MigrationCompleteNotification;
@@ -192,7 +192,7 @@ mod tests {
         MIGRATED_TO.save(deps.as_mut().storage, &migrated_to_state)?;
         let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
         let broadcast_to_addresses = vec!["listener_a".to_string(), "listener_b".to_string()];
-        let res = broadcast_migration_complete_event_notification(
+        let res = broadcast_migration_complete_notification(
             deps.as_mut(),
             mode,
             broadcast_to_addresses.clone(),
@@ -235,7 +235,7 @@ mod tests {
         for invalid_mode in invalid_modes {
             CONTRACT_MODE.save(deps.as_mut().storage, &invalid_mode)?;
             let mode = CONTRACT_MODE.load(deps.as_ref().storage)?;
-            let res = broadcast_migration_complete_event_notification(
+            let res = broadcast_migration_complete_notification(
                 deps.as_mut(),
                 mode,
                 vec!["contract_a".to_string()],

@@ -54,7 +54,7 @@ pub fn register_to_notify_on_migration_complete(
     Ok(Response::new())
 }
 
-pub fn broadcast_migration_complete_event_notification(
+pub fn broadcast_migration_complete_notification(
     deps: DepsMut,
     contract_mode: ContractMode,
     addresses: Vec<String>,
