@@ -17,7 +17,7 @@ pub enum MigrationDirection {
 /// * `deps` - a reference to Extern containing all the contract's external dependencies
 /// * `direction` - specifies which migration direction to query a contract about To or From
 pub fn query_migrated_info(deps: Deps, direction: MigrationDirection) -> StdResult<Binary> {
-    return match direction {
+    match direction {
         MigrationDirection::From => {
             let migrated_from = MIGRATED_FROM.may_load(deps.storage)?;
             match migrated_from {
@@ -36,5 +36,5 @@ pub fn query_migrated_info(deps: Deps, direction: MigrationDirection) -> StdResu
                 ))),
             }
         }
-    };
+    }
 }
