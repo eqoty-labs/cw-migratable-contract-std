@@ -36,6 +36,8 @@ pub enum MigratableExecuteMsg {
     BroadcastMigrationCompleteNotification {
         /// addresses to send a MigrationCompleteNotification
         addresses: Vec<String>,
+        /// the code for the addresses
+        code_hash: String,
         data: Option<Binary>,
     },
 }
