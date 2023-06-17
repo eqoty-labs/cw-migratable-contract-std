@@ -1,9 +1,13 @@
-use cosmwasm_std::{CanonicalAddr, DepsMut, Response, StdError, StdResult, Storage};
+use crate::msg::MigrationListenerExecuteMsg;
+use cosmwasm_std::{
+    to_binary, Binary, CanonicalAddr, DepsMut, Response, StdError, StdResult, Storage, SubMsg,
+    WasmMsg,
+};
 use schemars::_serde_json::to_string;
 
 use crate::msg_types::ReplyError::OperationUnavailable;
 use crate::state::{
-    CanonicalContractInfo, ContractMode, MIGRATION_COMPLETE_EVENT_SUBSCRIBERS,
+    CanonicalContractInfo, ContractMode, MIGRATED_TO, MIGRATION_COMPLETE_EVENT_SUBSCRIBERS,
     REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS,
 };
 
@@ -26,12 +30,12 @@ pub fn check_contract_mode(
     allowed_contract_modes: Vec<ContractMode>,
     contract_mode: &ContractMode,
     error_msg: Option<String>,
-) -> Option<StdError> {
-    return if !allowed_contract_modes.contains(contract_mode) {
-        Some(build_operation_unavailable_error(contract_mode, error_msg))
+) -> StdResult<()> {
+    if !allowed_contract_modes.contains(contract_mode) {
+        Err(build_operation_unavailable_error(contract_mode, error_msg))
     } else {
-        None
-    };
+        Ok(())
+    }
 }
 
 pub fn register_to_notify_on_migration_complete(
@@ -40,11 +44,7 @@ pub fn register_to_notify_on_migration_complete(
     address: String,
     code_hash: String,
 ) -> StdResult<Response> {
-    if let Some(contract_mode_error) =
-        check_contract_mode(vec![ContractMode::Running], &contract_mode, None)
-    {
-        return Err(contract_mode_error);
-    }
+    check_contract_mode(vec![ContractMode::Running], &contract_mode, None)?;
     let validated = deps.api.addr_validate(address.as_str())?;
     add_migration_complete_event_subscriber(
         deps.storage,
@@ -54,10 +54,42 @@ pub fn register_to_notify_on_migration_complete(
     Ok(Response::new())
 }
 
+pub fn broadcast_migration_complete_event_notification(
+    deps: DepsMut,
+    contract_mode: ContractMode,
+    addresses: Vec<String>,
+    code_hash: String,
+    data: Option<Binary>,
+) -> StdResult<Response> {
+    check_contract_mode(vec![ContractMode::MigratedOut], &contract_mode, None)?;
+
+    let migrated_to = MIGRATED_TO.load(deps.storage)?;
+    let msg = to_binary(
+        &MigrationListenerExecuteMsg::MigrationCompleteNotification {
+            to: migrated_to.contract.into_humanized(deps.api)?,
+            data,
+        },
+    )?;
+    let sub_msgs = addresses
+        .iter()
+        .map(|address| {
+            let contract_addr = deps.api.addr_validate(address)?.to_string();
+            Ok(SubMsg::new(WasmMsg::Execute {
+                msg: msg.clone(),
+                contract_addr,
+                code_hash: code_hash.clone(),
+                funds: vec![],
+            }))
+        })
+        .collect::<StdResult<Vec<SubMsg>>>()?;
+
+    Ok(Response::new().add_submessages(sub_msgs))
+}
+
 pub fn add_migration_complete_event_subscriber(
     storage: &mut dyn Storage,
     address: &CanonicalAddr,
-    code_hash: &String,
+    code_hash: &str,
 ) -> StdResult<()> {
     if let Some(remaining_slots) = REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS.may_load(storage)? {
         if remaining_slots == 0 {
@@ -74,7 +106,7 @@ pub fn add_migration_complete_event_subscriber(
     let mut update = false;
     let new_contract = CanonicalContractInfo {
         address: address.clone(),
-        code_hash: code_hash.clone(),
+        code_hash: code_hash.to_string(),
     };
     if !contracts.contains(&new_contract) {
         contracts.push(new_contract);
