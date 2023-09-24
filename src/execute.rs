@@ -1,50 +1,19 @@
-use crate::msg::MigrationListenerExecuteMsg;
 use cosmwasm_std::{
-    to_binary, Binary, CanonicalAddr, DepsMut, Response, StdError, StdResult, Storage, SubMsg,
-    WasmMsg,
+    to_binary, Binary, CanonicalAddr, ContractInfo, Deps, DepsMut, Response, StdError, StdResult,
+    Storage, SubMsg, WasmMsg,
 };
-use schemars::_serde_json::to_string;
 
-use crate::msg_types::ReplyError::OperationUnavailable;
+use crate::msg::MigrationListenerExecuteMsg;
 use crate::state::{
-    CanonicalContractInfo, ContractMode, MIGRATED_TO, MIGRATION_COMPLETE_EVENT_SUBSCRIBERS,
+    CanonicalContractInfo, MIGRATION_COMPLETE_EVENT_SUBSCRIBERS,
     REMAINING_MIGRATION_COMPLETE_EVENT_SUB_SLOTS,
 };
 
-pub fn build_operation_unavailable_error(
-    contract_mode: &ContractMode,
-    error_msg: Option<String>,
-) -> StdError {
-    StdError::generic_err(
-        to_string(&OperationUnavailable {
-            message: error_msg.unwrap_or(format!(
-                "Not available in contact mode: {:?}.",
-                contract_mode
-            )),
-        })
-        .unwrap(),
-    )
-}
-
-pub fn check_contract_mode(
-    allowed_contract_modes: Vec<ContractMode>,
-    contract_mode: &ContractMode,
-    error_msg: Option<String>,
-) -> StdResult<()> {
-    if !allowed_contract_modes.contains(contract_mode) {
-        Err(build_operation_unavailable_error(contract_mode, error_msg))
-    } else {
-        Ok(())
-    }
-}
-
 pub fn register_to_notify_on_migration_complete(
     deps: DepsMut,
-    contract_mode: ContractMode,
     address: String,
     code_hash: String,
 ) -> StdResult<Response> {
-    check_contract_mode(vec![ContractMode::Running], &contract_mode, None)?;
     let validated = deps.api.addr_validate(address.as_str())?;
     add_migration_complete_event_subscriber(
         deps.storage,
@@ -55,18 +24,15 @@ pub fn register_to_notify_on_migration_complete(
 }
 
 pub fn broadcast_migration_complete_notification(
-    deps: DepsMut,
-    contract_mode: ContractMode,
+    deps: Deps,
+    migrated_to: &ContractInfo,
     addresses: Vec<String>,
     code_hash: String,
     data: Option<Binary>,
 ) -> StdResult<Response> {
-    check_contract_mode(vec![ContractMode::MigratedOut], &contract_mode, None)?;
-
-    let migrated_to = MIGRATED_TO.load(deps.storage)?;
     let msg = to_binary(
         &MigrationListenerExecuteMsg::MigrationCompleteNotification {
-            to: migrated_to.contract.into_humanized(deps.api)?,
+            to: migrated_to.clone(),
             data,
         },
     )?;

@@ -45,16 +45,3 @@ pub enum MigrationListenerExecuteMsg {
         data: Option<Binary>,
     },
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum MigratableQueryMsg {
-    MigratedFrom {},
-    MigratedTo {},
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum MigratableQueryAnswer {
-    MigrationInfo(Option<ContractInfo>),
-}
