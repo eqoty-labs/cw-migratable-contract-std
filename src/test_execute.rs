@@ -145,21 +145,30 @@ mod tests {
             address: Addr::unchecked("contract_addr"),
             code_hash: "contract_v2_code_hash".to_string(),
         };
-        let broadcast_to_addresses = vec!["listener_a".to_string(), "listener_b".to_string()];
+
+        let broadcast_to_contracts = vec![
+            ContractInfo {
+                address: Addr::unchecked("listener_a"),
+                code_hash: "listener_code_hash".to_string(),
+            },
+            ContractInfo {
+                address: Addr::unchecked("listener_b"),
+                code_hash: "listener_code_hash".to_string(),
+            },
+        ];
         let res = broadcast_migration_complete_notification(
             deps.as_ref(),
             migrated_to,
-            broadcast_to_addresses.clone(),
-            "listener_code_hash".to_string(),
+            broadcast_to_contracts.clone(),
             Some(Binary::from(b"payload")),
         )?;
 
         assert_eq!(
-            broadcast_to_addresses
+            broadcast_to_contracts
                 .into_iter()
-                .map(|addr| {
+                .map(|contract| {
                     SubMsg::new(WasmMsg::Execute {
-                        contract_addr: addr.to_string(),
+                        contract_addr: contract.address.to_string(),
                         code_hash: "listener_code_hash".to_string(),
                         msg: to_binary(&MigrationCompleteNotification {
                             to: migrated_to.clone(),

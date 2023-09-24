@@ -26,8 +26,7 @@ pub fn register_to_notify_on_migration_complete(
 pub fn broadcast_migration_complete_notification(
     deps: Deps,
     migrated_to: &ContractInfo,
-    addresses: Vec<String>,
-    code_hash: String,
+    notification_recipients: Vec<ContractInfo>,
     data: Option<Binary>,
 ) -> StdResult<Response> {
     let msg = to_binary(
@@ -36,14 +35,17 @@ pub fn broadcast_migration_complete_notification(
             data,
         },
     )?;
-    let sub_msgs = addresses
-        .iter()
-        .map(|address| {
-            let contract_addr = deps.api.addr_validate(address)?.to_string();
+    let sub_msgs = notification_recipients
+        .into_iter()
+        .map(|contract| {
+            let contract_addr = deps
+                .api
+                .addr_validate(contract.address.as_str())?
+                .to_string();
             Ok(SubMsg::new(WasmMsg::Execute {
                 msg: msg.clone(),
                 contract_addr,
-                code_hash: code_hash.clone(),
+                code_hash: contract.code_hash,
                 funds: vec![],
             }))
         })
