@@ -36,6 +36,3 @@ schemars = "0.8.15"
 cosmwasm-std = { package = "secret-cosmwasm-std", git = "https://github.com/luca992/cosmwasm", branch = "instantiate-admin" }
 secret-toolkit = { git = "https://github.com/luca992/secret-toolkit", branch = "instantiate-admin", default-features = false, features = ["storage", "serialization"] }
 strum = { version = "0.25.0", features = ["derive"] }
-
-[patch.crates-io]
-cosmwasm-std = { package = "secret-cosmwasm-std", git = "https://github.com/luca992/cosmwasm", branch = "instantiate-admin" }
