@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    to_binary, Binary, CanonicalAddr, ContractInfo, Deps, DepsMut, Response, StdError, StdResult,
-    Storage, SubMsg, WasmMsg,
+    to_binary, Binary, CanonicalAddr, ContractInfo, CosmosMsg, Deps, DepsMut, ReplyOn, Response,
+    StdError, StdResult, Storage, SubMsg, WasmMsg,
 };
 
 use crate::msg::MigrationListenerExecuteMsg;
@@ -23,12 +23,14 @@ pub fn register_to_notify_on_migration_complete(
     Ok(Response::new())
 }
 
-pub fn broadcast_migration_complete_notification(
+pub fn create_broadcast_migration_complete_notification_msgs(
     deps: Deps,
+    reply_on: ReplyOn,
+    reply_id: u64,
     migrated_to: &ContractInfo,
     notification_recipients: Vec<ContractInfo>,
     data: Option<Binary>,
-) -> StdResult<Response> {
+) -> StdResult<Vec<SubMsg>> {
     let msg = to_binary(
         &MigrationListenerExecuteMsg::MigrationCompleteNotification {
             to: migrated_to.clone(),
@@ -42,16 +44,21 @@ pub fn broadcast_migration_complete_notification(
                 .api
                 .addr_validate(contract.address.as_str())?
                 .to_string();
-            Ok(SubMsg::new(WasmMsg::Execute {
-                msg: msg.clone(),
-                contract_addr,
-                code_hash: contract.code_hash,
-                funds: vec![],
-            }))
+            Ok(SubMsg {
+                msg: CosmosMsg::Wasm(WasmMsg::Execute {
+                    msg: msg.clone(),
+                    contract_addr,
+                    code_hash: contract.code_hash,
+                    funds: vec![],
+                }),
+                id: reply_id,
+                reply_on: reply_on.clone(),
+                gas_limit: None,
+            })
         })
         .collect::<StdResult<Vec<SubMsg>>>()?;
 
-    Ok(Response::new().add_submessages(sub_msgs))
+    Ok(sub_msgs)
 }
 
 pub fn add_migration_complete_event_subscriber(

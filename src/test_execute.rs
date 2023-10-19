@@ -2,12 +2,12 @@
 mod tests {
     use cosmwasm_std::testing::mock_dependencies;
     use cosmwasm_std::{
-        to_binary, Addr, Binary, ContractInfo, StdError, StdResult, SubMsg, WasmMsg,
+        to_binary, Addr, Binary, ContractInfo, ReplyOn, StdError, StdResult, SubMsg, WasmMsg,
     };
 
     use crate::execute::{
-        broadcast_migration_complete_notification, register_to_notify_on_migration_complete,
-        update_migrated_subscriber,
+        create_broadcast_migration_complete_notification_msgs,
+        register_to_notify_on_migration_complete, update_migrated_subscriber,
     };
     use crate::msg::MigrationListenerExecuteMsg::MigrationCompleteNotification;
     use crate::state::{
@@ -156,8 +156,12 @@ mod tests {
                 code_hash: "listener_code_hash".to_string(),
             },
         ];
-        let res = broadcast_migration_complete_notification(
+        let reply_on = ReplyOn::Error;
+        let reply_id = 11;
+        let messages = create_broadcast_migration_complete_notification_msgs(
             deps.as_ref(),
+            reply_on.clone(),
+            reply_id,
             migrated_to,
             broadcast_to_contracts.clone(),
             Some(Binary::from(b"payload")),
@@ -167,19 +171,22 @@ mod tests {
             broadcast_to_contracts
                 .into_iter()
                 .map(|contract| {
-                    SubMsg::new(WasmMsg::Execute {
-                        contract_addr: contract.address.to_string(),
-                        code_hash: "listener_code_hash".to_string(),
-                        msg: to_binary(&MigrationCompleteNotification {
-                            to: migrated_to.clone(),
-                            data: Some(Binary::from(b"payload")),
-                        })
-                        .unwrap(),
-                        funds: vec![],
-                    })
+                    SubMsg::reply_on_error(
+                        WasmMsg::Execute {
+                            contract_addr: contract.address.to_string(),
+                            code_hash: "listener_code_hash".to_string(),
+                            msg: to_binary(&MigrationCompleteNotification {
+                                to: migrated_to.clone(),
+                                data: Some(Binary::from(b"payload")),
+                            })
+                            .unwrap(),
+                            funds: vec![],
+                        },
+                        reply_id,
+                    )
                 })
                 .collect::<Vec<SubMsg>>(),
-            res.messages
+            messages
         );
 
         Ok(())
