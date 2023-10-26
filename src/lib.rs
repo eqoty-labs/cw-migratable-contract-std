@@ -2,5 +2,5 @@ pub mod execute;
 pub mod msg;
 pub mod state;
 
-mod errors;
+pub mod errors;
 mod test_execute;
