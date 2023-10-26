@@ -10,7 +10,7 @@ pub enum MigratableStdError {
     MigrationCompleteNotificationFailed(String, String),
 }
 
-fn humanize_migration_complete_notification_error(
+pub fn humanize_migration_complete_notification_error(
     result: SubMsgResult,
 ) -> Result<(), MigratableStdError> {
     match result {
